@@ -1,5 +1,22 @@
 # The Infinial-Fractionator
 
+Why? Because what comes round again is what made it. A refrain in a song, a habit in a conversation, a loop in a machine: find the repeat and you have found the thing underneath.
+
+Fractions are the cleanest case. Every fraction, written out in decimals, ends up repeating, and every repeating decimal is a fraction. Find the period and an endless signal folds back into two small numbers:
+
+```
+  1/7 = 0.142857 142857 142857 …
+          └─┬──┘
+            └─▶ 142857 / 999999 = 1/7
+  the period, folded back, is the fraction again.
+```
+
+And for a prime like 7 the period always divides one less than the prime: sevenths repeat in six, never more.
+
+Not every chime is the big bell. At decimal place 762, π rings six nines in a row. Feynman is said to have wanted to learn π up to there, recite "… nine nine nine nine nine nine, and so on", and leave his listeners sure that π was rational. It is not. That is a small bell dressed as the big one, and the Fractionator can tell them apart.
+
+In Indian classical music the beat cycle comes round to *sam*, its first beat, and the whole room arrives there together. Nobody theorises sam. Everyone waits for it, a reincidence anticipated by all. A period is sam. The Fractionator listens for it, and tells you plainly when it never comes.
+
 Heave in a run of serial signal, and it reports the repeats it noticed. Named by User1, after the White Knight, who would have built it upside down.
 
 **[Try it in your browser →](https://silberpunkt.github.io/fractionator/)** Everything runs in the page; nothing is sent anywhere.
