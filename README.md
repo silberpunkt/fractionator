@@ -46,4 +46,27 @@ Each small bell gives the stretch, how long it is, every place it comes round, a
 - `sqrt2.png`: the square root of 2, dust. Small recurrences everywhere, no period anywhere.
 - `wringing.png`: User1's conversation with Ask Brave, read word by word. The marks gather near the end, where the summing-up repeats what was found earlier.
 
-The command-line machine is plain Python 3 (the picture needs Pillow); the page is the same machine in one HTML file. MIT licence; see [LICENSE](LICENSE).
+## In JavaScript
+
+The machine is also one file of JavaScript, [fractionator.js](fractionator.js): no libraries, no network. The page borrows it, and it runs at a console too, with the same words as the Python:
+
+```
+qjs --std fractionator.js --fraction 22/7 --digits 300 --png frac.png
+node fractionator.js --sqrt 2 --digits 20000 --png sqrt2.png
+```
+
+In your own page:
+
+```html
+<script src="fractionator.js"></script>
+<script>
+  const r = Fractionator.ring(Fractionator.fractionDigits('22/7', 300));
+  console.log(r.text);        // the report: r.period is the big bell, r.bells the small ones
+  const pic = Fractionator.recurrence(r.seq, { window: 3 });
+  const png = Fractionator.png(pic);   // the picture, as PNG bytes
+</script>
+```
+
+QuickJS, Node and Python print the same report, word for word, and draw the same picture, pixel for pixel. That was checked across eight signals and three engines. The page's picture is the same PNG, byte for byte, as the one the command line writes.
+
+The Python wants Python 3 (and Pillow for the picture); the JavaScript wants nothing. MIT licence; see [LICENSE](LICENSE).

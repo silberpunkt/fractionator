@@ -18,7 +18,7 @@
  button{background:#12141a;color:#e8b34b;border:1px solid #3a3f47;border-radius:6px;font:15px ui-monospace,Consolas,monospace;padding:4px 12px;cursor:pointer}
  button:hover{border-color:#3f86d6}
  button.go{color:#12141a;background:#e8b34b;border-color:#e8b34b}
- canvas{display:block;width:100%;max-width:720px;aspect-ratio:1;background:#0b0d10;border:1px solid #2a3040;border-radius:6px;image-rendering:pixelated}
+ img.plot{display:block;width:100%;max-width:720px;aspect-ratio:1;background:#0b0d10;border:1px solid #2a3040;border-radius:6px;image-rendering:pixelated}
  a{color:#7fb2ea}
 </style></head>
 <body><div class="col">
@@ -80,7 +80,8 @@
   <button data-demo="dotcomma">a dotcomma message</button>
 </div>
 <pre class="out" id="out">Press Ring it.</pre>
-<canvas id="plot" width="720" height="720"></canvas>
+<img id="plot" class="plot" alt="the recurrence plot: across and down are both time; a mark where a stretch comes round again">
+<p class="note"><a id="save" download="fractionator.png" href="#">save the picture</a>: the same PNG the command line writes, pixel for pixel.</p>
 
 <h2>USER1'S FIELD</h2>
 <pre class="dia">  |!||||.||..|.|||||||.|.|.....|.|.|.||.|||.||.||
@@ -96,113 +97,65 @@
   Every small letter begins .,, and every space is ..,.....
   So the letters come round as repeats, and the Fractionator hears them.</pre>
 
+<h2>USE IT YOURSELF</h2>
+<p>The machine is one file, <a href="fractionator.js">fractionator.js</a>, and it runs wherever JavaScript does. This page borrows it. So can your page, or a console:</p>
+<pre class="dia">  in a page   &lt;script src="fractionator.js"&gt;&lt;/script&gt;
+              Fractionator.ring(Fractionator.fractionDigits('22/7', 300)).text
+  QuickJS     qjs --std fractionator.js --fraction 22/7 --digits 300 --png frac.png
+  Node        node fractionator.js --sqrt 2 --digits 20000 --png sqrt2.png
+  Python      python fractionator.py --file story.txt --words --png story.png</pre>
+<p>QuickJS, Node and Python print the same report, word for word, and draw the same picture, pixel for pixel. That was checked, not hoped: eight signals, three engines, every line and every pixel compared. The picture this page shows is made by the same function, and saves as the same PNG.</p>
+<p class="note">In the file: ring, period, repeats, recurrence, png, sqrtDigits, fractionDigits, tokens. No libraries, no network, MIT.</p>
+
 <h2>LINEAGE</h2>
 <p>The White Knight, in <i>Through the Looking-Glass</i> (1871), kept his box upside down so the rain couldn't get in, and is generally read as Lewis Carroll's portrait of himself. The Fractionator is his kind of machine: it works forever, it's quite correct, and on an irrational number it never arrives.</p>
 <p>The picture is a recurrence plot, a way of seeing repeats that has served physics and signal work for decades. The bells come from a suffix array: every position in the signal, sorted, so that the stretches that share a beginning sit side by side.</p>
-<p class="note">Everything runs in this page; nothing is sent anywhere. The same machine for the command line: <a href="fractionator.py">fractionator.py</a>. MIT licence.</p>
+<p class="note">Everything runs in this page; nothing is sent anywhere. The machine is <a href="fractionator.js">fractionator.js</a>; its elder for the command line is <a href="fractionator.py">fractionator.py</a>. MIT licence.</p>
 </div>
 
+<script src="fractionator.js"></script>
 <script>
-/* ---- the machine: the same steps as fractionator.py, in the page ---- */
-function isqrt(n) {                                   /* integer square root of a BigInt, by Newton from above */
-  if (n < 2n) return n;
-  let x = 10n ** BigInt(Math.ceil(n.toString().length / 2));
-  for (;;) { const y = (x + n / x) >> 1n; if (y >= x) return x; x = y; }
-}
-function sqrtDigits(k, d) {
-  const s = isqrt(BigInt(k) * 10n ** BigInt(2 * d)).toString(), whole = isqrt(BigInt(k)).toString().length;
-  return s.slice(whole, whole + d);
-}
-function fractionDigits(num, den, d) {
-  let r = BigInt(num) % BigInt(den); const D = BigInt(den), out = [];
-  for (let i = 0; i < d; i++) { r *= 10n; out.push((r / D).toString()); r %= D; }
-  return out.join('');
-}
-function period(seq) {                                /* the big bell: shortest p with the whole signal its first p, repeated */
-  const n = seq.length;
-  for (let p = 1; p <= n >> 1; p++) { let ok = true; for (let i = p; i < n; i++) if (seq[i] !== seq[i - p]) { ok = false; break; } if (ok) return p; }
-  return 0;
-}
-function same(seq, a, b, k) { for (let i = 0; i < k; i++) if (seq[a + i] !== seq[b + i]) return false; return true; }
-function occurrences(seq, a, k) { const out = []; for (let i = 0; i + k <= seq.length; i++) if (seq[i] === seq[a] && same(seq, i, a, k)) out.push(i); return out; }
-function inside(seq, a, k, b, m) { for (let i = b; i + k <= b + m; i++) if (same(seq, a, i, k)) return true; return false; }
-function repeats(seq, minlen, top) {                  /* the small bells, by suffix array: neighbours share beginnings */
-  const n = seq.length, sa = Array.from({ length: n }, (_, i) => i);
-  sa.sort((a, b) => { for (let k = 0; k < 256; k++) { if (a + k >= n) return -1; if (b + k >= n) return 1; const d = seq[a + k] - seq[b + k]; if (d) return d; } return 0; });
-  const found = [];
-  for (let i = 1; i < n; i++) {
-    const a = sa[i - 1], b = sa[i]; let k = 0;
-    while (a + k < n && b + k < n && seq[a + k] === seq[b + k]) k++;
-    if (k >= minlen) found.push([k, Math.min(a, b)]);
+/* ---- the page: it borrows the machine from fractionator.js, the same file QuickJS and Node run ---- */
+(function () {
+  const F = window.Fractionator, $ = id => document.getElementById(id);
+  let lastUrl = null;
+  function read() {
+    const kind = $('kind').value, d = Math.max(10, Math.min(200000, parseInt($('digits').value, 10) || 10000));
+    if (kind === 'sqrt') { const k = parseInt($('num').value, 10) || 2; return { toks: Array.from(F.sqrtDigits(k, d)), name: 'the first ' + d + ' digits of the square root of ' + k }; }
+    if (kind === 'fraction') { const f = ($('num').value || '22/7').trim(); return { toks: Array.from(F.fractionDigits(f, d)), name: 'the first ' + d + ' digits of ' + f }; }
+    const text = $('sig').value;
+    if (kind === 'words') return { toks: F.tokens(text, true), name: 'the text given', words: true };
+    return { toks: Array.from(text.replace(/\s+$/, '')), name: 'the signal given' };
   }
-  found.sort((x, y) => y[0] - x[0] || x[1] - y[1]);
-  const out = [];
-  for (const [k, a] of found) {
-    if (out.some(([m, at]) => inside(seq, a, k, at[0], m))) continue;   /* only an echo of one already rung */
-    out.push([k, occurrences(seq, a, k)]);
-    if (out.length >= top) break;
-  }
-  return out;
-}
-function plot(seq, window, crowd) {
-  const cv = document.getElementById('plot'), g = cv.getContext('2d'), n = seq.length, size = 720;
-  const step = Math.max(1, Math.ceil(n / size)), m = Math.ceil(n / step), px = size / m;
-  g.fillStyle = '#0b0d10'; g.fillRect(0, 0, size, size);
-  g.fillStyle = '#3a3f47'; for (let i = 0; i < m; i++) g.fillRect(i * px, i * px, Math.max(1, px), Math.max(1, px));
-  const where = new Map();
-  for (let i = 0; i + window <= n; i++) { const key = seq.slice(i, i + window).join(','); let a = where.get(key); if (!a) where.set(key, a = []); a.push(i); }
-  g.fillStyle = '#e8b34b';
-  for (const at of where.values()) {
-    if (at.length < 2 || at.length > crowd) continue;
-    for (const a of at) for (const b of at) if (a !== b) g.fillRect(Math.floor(a / step) * px, Math.floor(b / step) * px, Math.max(1, px), Math.max(1, px));
-  }
-  return step;
-}
-/* ---- the page ---- */
-const $ = id => document.getElementById(id);
-function read() {
-  const kind = $('kind').value, d = Math.max(10, Math.min(200000, parseInt($('digits').value, 10) || 10000));
-  if (kind === 'sqrt') { const k = parseInt($('num').value, 10) || 2; return { tokens: Array.from(sqrtDigits(k, d)), name: 'the first ' + d + ' digits of the square root of ' + k, unit: 'marks' }; }
-  if (kind === 'fraction') { const f = ($('num').value || '22/7').split('/'); const a = parseInt(f[0], 10) || 22, b = parseInt(f[1], 10) || 1;
-    return { tokens: Array.from(fractionDigits(a, b, d)), name: 'the first ' + d + ' digits of ' + a + '/' + b, unit: 'marks' }; }
-  const text = $('sig').value;
-  if (kind === 'words') return { tokens: text.split(/\s+/).filter(Boolean), name: 'the text given', unit: 'words', words: true };
-  return { tokens: Array.from(text.replace(/\s+$/, '')), name: 'the signal given', unit: 'marks' };
-}
-function ring() {
-  const t0 = performance.now(), r = read(), toks = r.tokens, n = toks.length, out = [];
-  if (n < 2) { $('out').textContent = 'Too short to repeat anything.'; return; }
-  const ids = new Map(), seq = toks.map(w => { if (!ids.has(w)) ids.set(w, ids.size); return ids.get(w); });
-  const show = (a, k) => toks.slice(a, a + Math.min(k, 60)).join(r.words ? ' ' : '') + (k > 60 ? ' …' : '');
-  const minlen = parseInt($('min').value, 10) || (r.words ? 3 : Math.max(2, Math.round(2 * Math.log10(n)) - 2));
-  out.push('The Infinial-Fractionator, reading ' + r.name + ': ' + n + ' ' + r.unit + ', ' + ids.size + ' different.');
-  const p = period(seq);
-  out.push(p ? 'BIG BELL: the whole signal is its first ' + p + ' ' + r.unit + ', over and over: ' + show(0, p) : 'No big bell: the signal never settles into a period.');
-  const reps = repeats(seq, minlen, 12);
-  if (!reps.length) out.push('No small bells: nothing of ' + minlen + ' ' + r.unit + ' or more comes round again.');
-  else {
-    out.push('Small bells (' + minlen + ' ' + r.unit + ' or more that come round again), longest first:');
-    for (const [k, at] of reps) {
-      const gaps = [...new Set(at.slice(1).map((b, i) => b - at[i]))].sort((x, y) => x - y);
-      out.push('  ' + String(k).padStart(4) + ' ' + r.unit + ', ' + at.length + ' times, at ' + at.slice(0, 6).map(i => i + 1).join(', ') + (at.length > 6 ? ', …' : '') +
-        ' (' + gaps.slice(0, 4).join(', ') + (gaps.length > 4 ? ' …' : '') + ' apart):');
-      out.push('        ' + show(at[0], k));
+  function ring() {
+    const t0 = performance.now();
+    let r;
+    try {
+      const s = read();
+      r = F.ring(s.toks, { words: s.words, name: s.name, min: parseInt($('min').value, 10) || 0 });
+    } catch (e) { $('out').textContent = 'The Fractionator could not read that: ' + e.message; return; }
+    const lines = r.lines.slice();
+    if (r.seq) {
+      const w = r.unit === 'words' ? 3 : Math.max(3, r.minlen - 1), pic = F.recurrence(r.seq, { window: w });
+      if (lastUrl) URL.revokeObjectURL(lastUrl);
+      lastUrl = URL.createObjectURL(new Blob([F.png(pic)], { type: 'image/png' }));
+      $('plot').src = lastUrl; $('save').href = lastUrl;
+      lines.push('Drawn: the picture below (each pixel ' + pic.step + ' ' + r.unit + '; a mark where ' + w + ' in a row agree).');
     }
+    lines.push('(' + Math.round(performance.now() - t0) + ' ms, in this page)');
+    $('out').textContent = lines.join('\n');
   }
-  const w = r.words ? 3 : Math.max(3, minlen - 1), step = plot(seq, w, 60);
-  out.push('Picture: each pixel ' + step + ' ' + r.unit + '; a mark where ' + w + ' in a row come round again.  (' + Math.round(performance.now() - t0) + ' ms)');
-  $('out').textContent = out.join('\n');
-}
-const FIELD = '|!||||.||..|.|||||||.|.|.....|.|.|.||.|||.||.||';
-function dotcomma(s) { return Array.from(s).map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join('').replace(/0/g, '.').replace(/1/g, ','); }
-const DEMOS = {
-  frac: () => { $('kind').value = 'fraction'; $('num').value = '22/7'; $('digits').value = '300'; $('min').value = ''; },
-  sqrt: () => { $('kind').value = 'sqrt'; $('num').value = '2'; $('digits').value = '20000'; $('min').value = ''; },
-  field: () => { $('kind').value = 'marks'; $('sig').value = FIELD; $('min').value = '4'; },
-  dotcomma: () => { $('kind').value = 'marks'; $('sig').value = dotcomma('what hath odd boggined'); $('min').value = '8'; }
-};
-document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => { DEMOS[b.dataset.demo](); ring(); });
-$('run').onclick = ring;
-DEMOS.field(); ring();
+  const FIELD = '|!||||.||..|.|||||||.|.|.....|.|.|.||.|||.||.||';
+  const dotcomma = s => Array.from(s).map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join('').replace(/0/g, '.').replace(/1/g, ',');
+  const DEMOS = {
+    frac: () => { $('kind').value = 'fraction'; $('num').value = '22/7'; $('digits').value = '300'; $('min').value = ''; },
+    sqrt: () => { $('kind').value = 'sqrt'; $('num').value = '2'; $('digits').value = '20000'; $('min').value = ''; },
+    field: () => { $('kind').value = 'marks'; $('sig').value = FIELD; $('min').value = '4'; },
+    dotcomma: () => { $('kind').value = 'marks'; $('sig').value = dotcomma('what hath odd boggined'); $('min').value = '8'; }
+  };
+  document.querySelectorAll('[data-demo]').forEach(b => b.onclick = () => { DEMOS[b.dataset.demo](); ring(); });
+  $('run').onclick = ring;
+  DEMOS.field(); ring();
+})();
 </script>
 </body></html>
