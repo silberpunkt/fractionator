@@ -1,6 +1,6 @@
 # The Infinial-Fractionator
 
-Why? Because what comes round again is what made it. A refrain in a song, a habit in a conversation, a loop in a machine: find the repeat and you have found the thing underneath.
+This is a toy to quickly report and analyse repeats in a signal. A signal may represent a structure, and repeats may help reveal it. Here's how it works, and what it produces.
 
 Fractions are the cleanest case. Every fraction, written out in decimals, ends up repeating, and every repeating decimal is a fraction. Find the period and an endless signal folds back into two small numbers:
 
